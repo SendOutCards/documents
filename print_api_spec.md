@@ -13,7 +13,8 @@ The proposed solution simplifies the client experience by abstracting away our i
 3. Process orders through our standard SendOutCards workflow
 
 This approach allows third-party integrations to create cards without needing to understand our internal element structure. From our system's perspective, these externally-created cards will be processed identically to cards created within our platform.
-Benefits
+
+## Benefits
 
 Simplified integration for clients
 Consistent order processing
