@@ -16,10 +16,10 @@ This approach allows third-party integrations to create cards without needing to
 
 ## Benefits
 
-Simplified integration for clients
-Consistent order processing
-Maintains compatibility with existing workflows
-Reduces API complexity by hiding implementation details
+- Simplified integration for clients
+- Consistent order processing
+- Maintains compatibility with existing workflows
+- Reduces API complexity by hiding implementation details
 
 ## Proposed GraphQL Spec
 
@@ -28,7 +28,7 @@ enum CardType {
   FLAT_CARD
   TWO_PANEL_CARD
   THREE_PANEL_CARD
-  BIG_CAR
+  BIG_CARD
   POSTCARD
 }
 
@@ -205,7 +205,7 @@ This documentation covers the two main mutations for creating and finalizing car
 | `FLAT_CARD`        | A flat card with front and back panels |
 | `TWO_PANEL_CARD`   | A card with two inside panels          |
 | `THREE_PANEL_CARD` | A card with three inside panels        |
-| `BIG_CAR`          | A large format card                    |
+| `BIG_CARD`          | A large format card                    |
 | `POSTCARD`         | A postcard with only a front panel     |
 
 ### CardOrientation
