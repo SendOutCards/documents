@@ -24,7 +24,7 @@ Reduces API complexity by hiding implementation details
 ## Proposed GraphQL Spec
 
 ```gql
-enum CardTye {
+enum CardType {
   FLAT_CARD
   TWO_PANEL_CARD
   THREE_PANEL_CARD
