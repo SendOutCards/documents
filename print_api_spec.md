@@ -25,11 +25,11 @@ This approach allows third-party integrations to create cards without needing to
 
 ```gql
 enum CardType {
-  FLAT_CARD
-  TWO_PANEL_CARD
-  THREE_PANEL_CARD
-  BIG_CARD
   POSTCARD
+  FLATCARD
+  TWO_PANEL
+  THREE_PANEL
+  TWO_PANEL_BIG
 }
 
 enum CardOrientation {
@@ -56,67 +56,32 @@ input CardLinePanelInput {
   url: String!
 }
 
-input AddressInput {
-  line1: String!
-  line2: String
-  city: String!
-  stateOrProvince: String!
-  postalCode: String!
-}
-
-input RecipientsInput {
+input ContactInput {
   firstName: String!
   lastName: String!
-  address: AddressInput!
-}
-
-input FlatCardInput {
-  front: CardLinePanelInput!
-  back: CardLinePanelInput!
-}
-# The Card Variation inputs have duplication but it keeps it straight forward for client as opposed to them guessing what panel will go where if we allow a list of panels. Also explictly lets them state an inside spread or left & right
-input TwoPanelInput {
-  front: CardLinePanelInput!
-  left: CardLinePanelInput
-  right: CardLinePanelInput
-  spread: CardLinePanelInput
-  back: CardLinePanelInput!
-}
-
-input ThreePanelInput {
-  front: CardLinePanelInput!
-  back: CardLinePanelInput!
-  left: CardLinePanelInput
-  center: CardLinePanelInput
-  right: CardLinePanelInput
-  spread: CardLinePanelInput
-}
-
-input BigCardInput {
-  front: CardLinePanelInput!
-  left: CardLinePanelInput
-  right: CardLinePanelInput
-  spread: CardLinePanelInput
-  back: CardLinePanelInput!
-}
-
-input PostCardInput {
-  front: CardLinePanelInput!
+  companyName: String
+  address1: String!
+  address2: String!
+  city: String!
+  state: String!
+  postalCode: String!
+  countryCode: String!
+  externalReferenceId: ID
 }
 
 input CardLineInput {
+  type: CardType!
   orientation: CardOrientation!
-  paperType: CardPaperType # Default to standard if not given
-  recipients: [RecipientsInput!]! #You can send a single card to multiple recipients if needed
-  flatCard: FlatCardInput
-  twoPanelCard: TwoPanelInput
-  threePanelCard: ThreePanelInput
-  bigCard: BigCardInput
-  postCard: PostCardInput
+  recipients: [ContactInput!]!
+  front: CardLinePanelInput!
+  left: CardLinePanelInput
+  right: CardLinePanelInput
+  spread: CardLinePanelInput
+  back: CardLinePanelInput
 }
 
-input CardLineInput {
-  cards: CardLineInput!
+input CreateCardLineInput {
+  cards: [CardLineInput!]!
   shouldFinalizeOrder: Boolean # Default - false, If true no further action is required order will be created and cards will be printed. Otherwise finalizeOrder must be called to process
 }
 
@@ -134,11 +99,18 @@ type Address {
   postalCode: String!
 }
 
-type Recipient {
+type Contact {
   id: ID!
   firstName: String!
-  lastName: String
-  address: Address!
+  lastName: String!
+  companyName: String
+  address1: String!
+  address2: String!
+  city: String!
+  state: String!
+  postalCode: String!
+  countryCode: String!
+  externalReferenceId: ID
 }
 
 type CardLine {
@@ -146,7 +118,7 @@ type CardLine {
   type: CardType!
   orientation: CardOrientation!
   panels:  [CardPanel!]!
-  recipients: [Recipients!]!
+  recipients: [Contact!]!
 }
 
 type Order {
@@ -160,7 +132,6 @@ query order(orderId: [Card]) {
     ...Order
   }
 }
-
 
 mutation createCardLines(input: [CreateCardLineInput!]!) {
   cardLines(input: $input) {
@@ -200,13 +171,13 @@ This documentation covers the two main mutations for creating and finalizing car
 
 ### CardType
 
-| Value              | Description                            |
-| ------------------ | -------------------------------------- |
-| `FLAT_CARD`        | A flat card with front and back panels |
-| `TWO_PANEL_CARD`   | A card with two inside panels          |
-| `THREE_PANEL_CARD` | A card with three inside panels        |
-| `BIG_CARD`          | A large format card                    |
-| `POSTCARD`         | A postcard with only a front panel     |
+| Value           | Description                            |
+| --------------- | -------------------------------------- |
+| `POSTCARD`      | A postcard with only a front panel     |
+| `FLATCARD`      | A flat card with front and back panels |
+| `TWO_PANEL`     | A card with two inside panels          |
+| `THREE_PANEL`   | A card with three inside panels        |
+| `TWO_PANEL_BIG` | A large format card with two panels    |
 
 ### CardOrientation
 
@@ -254,14 +225,21 @@ This documentation covers the two main mutations for creating and finalizing car
 | `stateOrProvince` | `String!` | State or province                 |
 | `postalCode`      | `String!` | Postal code                       |
 
-### Recipient
+### Contact
 
-| Field       | Type       | Description                           |
-| ----------- | ---------- | ------------------------------------- |
-| `id`        | `ID!`      | Unique identifier for the recipient   |
-| `firstName` | `String!`  | First name of the recipient           |
-| `lastName`  | `String`   | Last name of the recipient (optional) |
-| `address`   | `Address!` | Shipping address of the recipient     |
+| Field                 | Type      | Description                       |
+| --------------------- | --------- | --------------------------------- |
+| `id`                  | `ID!`     | Unique identifier for the contact |
+| `firstName`           | `String!` | First name of the contact         |
+| `lastName`            | `String!` | Last name of the contact          |
+| `companyName`         | `String`  | Company name (optional)           |
+| `address1`            | `String!` | First line of address             |
+| `address2`            | `String!` | Second line of address            |
+| `city`                | `String!` | City                              |
+| `state`               | `String!` | State or province                 |
+| `postalCode`          | `String!` | Postal code                       |
+| `countryCode`         | `String!` | Country code                      |
+| `externalReferenceId` | `ID`      | External reference ID (optional)  |
 
 ### CardLine
 
@@ -271,7 +249,7 @@ This documentation covers the two main mutations for creating and finalizing car
 | `type`        | `CardType!`        | Type of card                        |
 | `orientation` | `CardOrientation!` | Orientation of the card             |
 | `panels`      | `[CardPanel!]!`    | List of panels in the card          |
-| `recipients`  | `[Recipients!]!`   | List of recipients for this card    |
+| `recipients`  | `[Contact!]!`      | List of recipients for this card    |
 
 ### Order
 
@@ -288,87 +266,40 @@ This documentation covers the two main mutations for creating and finalizing car
 | ----- | --------- | ---------------------- |
 | `url` | `String!` | URL of the panel image |
 
-### AddressInput
+### ContactInput
 
-| Field             | Type      | Description                       |
-| ----------------- | --------- | --------------------------------- |
-| `line1`           | `String!` | First line of address             |
-| `line2`           | `String`  | Second line of address (optional) |
-| `city`            | `String!` | City                              |
-| `stateOrProvince` | `String!` | State or province                 |
-| `postalCode`      | `String!` | Postal code                       |
-
-### RecipientsInput
-
-| Field       | Type            | Description                       |
-| ----------- | --------------- | --------------------------------- |
-| `firstName` | `String!`       | First name of the recipient       |
-| `lastName`  | `String!`       | Last name of the recipient        |
-| `address`   | `AddressInput!` | Shipping address of the recipient |
-
-### FlatCardInput
-
-| Field   | Type                  | Description             |
-| ------- | --------------------- | ----------------------- |
-| `front` | `CardLinePanelInput!` | Front panel of the card |
-| `back`  | `CardLinePanelInput!` | Back panel of the card  |
-
-### TwoPanelInput
-
-| Field    | Type                  | Description                                        |
-| -------- | --------------------- | -------------------------------------------------- |
-| `front`  | `CardLinePanelInput!` | Front panel of the card                            |
-| `left`   | `CardLinePanelInput`  | Inside left panel (required with right)            |
-| `right`  | `CardLinePanelInput`  | Inside right panel (required with left)            |
-| `spread` | `CardLinePanelInput`  | Inside spread panel (required if no left or right) |
-| `back`   | `CardLinePanelInput!` | Back panel of the card                             |
-
-### ThreePanelInput
-
-| Field    | Type                  | Description                                                  |
-| -------- | --------------------- | ------------------------------------------------------------ |
-| `front`  | `CardLinePanelInput!` | Front panel of the card                                      |
-| `back`   | `CardLinePanelInput!` | Back panel of the card                                       |
-| `left`   | `CardLinePanelInput`  | Inside left panel (required with center and right)           |
-| `center` | `CardLinePanelInput`  | Inside center panel (required with left and right)           |
-| `right`  | `CardLinePanelInput`  | Inside right panel (required with left and right)            |
-| `spread` | `CardLinePanelInput`  | Inside spread panel (required if no left, right, and center) |
-
-### BigCardInput
-
-| Field    | Type                  | Description                    |
-| -------- | --------------------- | ------------------------------ |
-| `front`  | `CardLinePanelInput!` | Front panel of the card        |
-| `left`   | `CardLinePanelInput`  | Inside left panel (optional)   |
-| `right`  | `CardLinePanelInput`  | Inside right panel (optional)  |
-| `spread` | `CardLinePanelInput`  | Inside spread panel (optional) |
-| `back`   | `CardLinePanelInput!` | Back panel of the card         |
-
-### PostCardInput
-
-| Field   | Type                  | Description                 |
-| ------- | --------------------- | --------------------------- |
-| `front` | `CardLinePanelInput!` | Front panel of the postcard |
+| Field                 | Type      | Description                      |
+| --------------------- | --------- | -------------------------------- |
+| `firstName`           | `String!` | First name of the contact        |
+| `lastName`            | `String!` | Last name of the contact         |
+| `companyName`         | `String`  | Company name (optional)          |
+| `address1`            | `String!` | First line of address            |
+| `address2`            | `String!` | Second line of address           |
+| `city`                | `String!` | City                             |
+| `state`               | `String!` | State or province                |
+| `postalCode`          | `String!` | Postal code                      |
+| `countryCode`         | `String!` | Country code                     |
+| `externalReferenceId` | `ID`      | External reference ID (optional) |
 
 ### CardLineInput
 
-| Field            | Type                  | Description                                               |
-| ---------------- | --------------------- | --------------------------------------------------------- |
-| `orientation`    | `CardOrientation!`    | Orientation of the card                                   |
-| `paperType`      | `CardPaperType`       | Paper type (defaults to `STANDARD` if not specified)      |
-| `recipients`     | `[RecipientsInput!]!` | List of recipients for this card                          |
-| `flatCard`       | `FlatCardInput`       | Configuration for a flat card (mutually exclusive)        |
-| `twoPanelCard`   | `TwoPanelInput`       | Configuration for a two-panel card (mutually exclusive)   |
-| `threePanelCard` | `ThreePanelInput`     | Configuration for a three-panel card (mutually exclusive) |
-| `bigCard`        | `BigCardInput`        | Configuration for a big card (mutually exclusive)         |
-| `postCard`       | `PostCardInput`       | Configuration for a postcard (mutually exclusive)         |
+| Field         | Type                  | Description                        |
+| ------------- | --------------------- | ---------------------------------- |
+| `type`        | `CardType!`           | Type of card                       |
+| `orientation` | `CardOrientation!`    | Orientation of the card            |
+| `recipients`  | `[ContactInput!]!`    | List of recipients for this card   |
+| `front`       | `CardLinePanelInput!` | Front panel of the card (required) |
+| `left`        | `CardLinePanelInput`  | Inside left panel (optional)       |
+| `right`       | `CardLinePanelInput`  | Inside right panel (optional)      |
+| `spread`      | `CardLinePanelInput`  | Inside spread panel (optional)     |
+| `back`        | `CardLinePanelInput`  | Back panel of the card (optional)  |
 
 ### CreateCardLineInput
 
-| Field                 | Type             | Description                                                     |
-| --------------------- | ---------------- | --------------------------------------------------------------- |
-| `cards`               | `CardLineInput!` | Card line configuration                                         |
-| `shouldFinalizeOrder` | `Boolean`        | Whether to finalize the order immediately (defaults to `false`) |
+| Field                 | Type                | Description                                                     |
+| --------------------- | ------------------- | --------------------------------------------------------------- |
+| `cards`               | `[CardLineInput!]!` | Array of card line configurations                               |
+| `shouldFinalizeOrder` | `Boolean`           | Whether to finalize the order immediately (defaults to `false`) |
 
 ## Mutations
 
@@ -416,7 +347,7 @@ mutation finalizeOrder(cardLineIds: [ID!]!) {
       code
       field
     }
-    cards {
+    order {
       ...Order
     }
   }
@@ -434,7 +365,7 @@ mutation finalizeOrder(cardLineIds: [ID!]!) {
 | Field    | Type                   | Description                                   |
 | -------- | ---------------------- | --------------------------------------------- |
 | `errors` | Array of error objects | Any errors that occurred during the operation |
-| `cards`  | Order object           | The finalized order details                   |
+| `order`  | Order object           | The finalized order details                   |
 
 ## Example Requests
 
@@ -446,27 +377,28 @@ curl -X POST https://api.example.com/graphql \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -d @- << 'EOF'
 {
-  "query": "mutation CreateCardLines($input: [CreateCardLineInput!]!) { cardLines(input: $input) { errors { message code field } lines { id type orientation panels { id url location } recipients { id firstName lastName address { line1 line2 city stateOrProvince postalCode } } } } }",
+  "query": "mutation CreateCardLines($input: [CreateCardLineInput!]!) { cardLines(input: $input) { errors { message code field } lines { id type orientation panels { id url location } recipients { id firstName lastName companyName address1 address2 city state postalCode countryCode } } } }",
   "variables": {
     "input": [
       {
-        "cards": {
-          "orientation": "HORIZONTAL",
-          "paperType": "PEARL",
-          "recipients": [
-            {
-              "firstName": "John",
-              "lastName": "Doe",
-              "address": {
-                "line1": "123 Main St",
-                "line2": "Apt 4B",
+        "cards": [
+          {
+            "type": "FLATCARD",
+            "orientation": "HORIZONTAL",
+            "recipients": [
+              {
+                "firstName": "John",
+                "lastName": "Doe",
+                "companyName": "Acme Inc",
+                "address1": "123 Main St",
+                "address2": "Apt 4B",
                 "city": "San Francisco",
-                "stateOrProvince": "CA",
-                "postalCode": "94103"
+                "state": "CA",
+                "postalCode": "94103",
+                "countryCode": "US",
+                "externalReferenceId": "customer_12345"
               }
-            }
-          ],
-          "flatCard": {
+            ],
             "front": {
               "url": "https://storage.example.com/images/card-front-12345.jpg"
             },
@@ -474,7 +406,7 @@ curl -X POST https://api.example.com/graphql \
               "url": "https://storage.example.com/images/card-back-12345.jpg"
             }
           }
-        },
+        ],
         "shouldFinalizeOrder": false
       }
     ]
@@ -493,7 +425,7 @@ EOF
       "lines": [
         {
           "id": "card_123456789",
-          "type": "FLAT_CARD",
+          "type": "FLATCARD",
           "orientation": "HORIZONTAL",
           "panels": [
             {
@@ -509,16 +441,16 @@ EOF
           ],
           "recipients": [
             {
-              "id": "recipient_123",
+              "id": "contact_123",
               "firstName": "John",
               "lastName": "Doe",
-              "address": {
-                "line1": "123 Main St",
-                "line2": "Apt 4B",
-                "city": "San Francisco",
-                "stateOrProvince": "CA",
-                "postalCode": "94103"
-              }
+              "companyName": "Acme Inc",
+              "address1": "123 Main St",
+              "address2": "Apt 4B",
+              "city": "San Francisco",
+              "state": "CA",
+              "postalCode": "94103",
+              "countryCode": "US"
             }
           ]
         }
@@ -536,7 +468,7 @@ curl -X POST https://api.example.com/graphql \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -d @- << 'EOF'
 {
-  "query": "mutation FinalizeOrder($cardLineIds: [ID!]!) { order(cardLineIds: $cardLineIds) { errors { message code field } cards { id cardLines { id type orientation recipients { firstName lastName } } } } }",
+  "query": "mutation FinalizeOrder($cardLineIds: [ID!]!) { order(cardLineIds: $cardLineIds) { errors { message code field } order { id cardLines { id type orientation recipients { firstName lastName } } } } }",
   "variables": {
     "cardLineIds": ["card_123456789", "card_987654321"]
   }
@@ -551,12 +483,12 @@ EOF
   "data": {
     "order": {
       "errors": [],
-      "cards": {
+      "order": {
         "id": "order_9876543210",
         "cardLines": [
           {
             "id": "card_123456789",
-            "type": "FLAT_CARD",
+            "type": "FLATCARD",
             "orientation": "HORIZONTAL",
             "recipients": [
               {
@@ -567,7 +499,7 @@ EOF
           },
           {
             "id": "card_987654321",
-            "type": "TWO_PANEL_CARD",
+            "type": "TWO_PANEL",
             "orientation": "VERTICAL",
             "recipients": [
               {
@@ -595,12 +527,13 @@ Both mutations return an `errors` array when issues occur. Each error object con
 
 ## Notes
 
-- When creating card lines, you must specify exactly one card type (flatCard, twoPanelCard, etc.).
+- Required panels vary by card type as follows:
+  - `POSTCARD`: front panel only
+  - `FLATCARD`: front and back panels
+  - `TWO_PANEL`: front, back, and either (left and right) OR spread
+  - `THREE_PANEL`: front, back, and either (left, center, and right) OR spread
+  - `TWO_PANEL_BIG`: front, back, and either (left and right) OR spread
 - The `shouldFinalizeOrder` parameter in `createCardLines` can be used to create and finalize an order in a single operation
-- Required panels vary by card type - refer to the input type definitions
-- For inside panels, you can either specify individual panels (left, center, right) or a spread panel, depending on your design.
-- For two panel cards you must supply either left AND right OR spread
-- For three panel cards you must supply either left, center, AND right OR spread
 - All requests require authentication via token in the Authorization header
 
 ## Common Errors
@@ -624,7 +557,7 @@ Both mutations return an `errors` array when issues occur. Each error object con
         {
           "message": "Required panel missing",
           "code": "MISSING_REQUIRED_PANEL",
-          "field": "flatCard.back"
+          "field": "back"
         }
       ],
       "lines": null
@@ -638,3 +571,6 @@ Both mutations return an `errors` array when issues occur. Each error object con
 - We will download the image provided for each panel and re upload the image to our own S3 buckets.
 - We need to determine the correct resolution/dimensions for images on panels
 - Maybe we provide a separate endpoint to create panel previews to ensure panels doesn't get cropped/stretched?
+- Need to add a max number of cards per mutation request (and then batch?)
+- Implement Rate Limiting
+- Dudupe images by creating a hash digest for panel URLs to get_or_create media asset
