@@ -4,21 +4,6 @@
 
 First of all, you need to have a SendOutCards account. For that, you can go to https://app.sendoutcards.com/ and create it.
 
-## Creating a campaign
-
-After you have an account, you need to create or purchase a campaign so you can send it via the API. To create a campaign:
-
-1. On the sidebar, click on "Campaigns"
-2. Make sure you're on the "My Campaigns" tab
-3. Select the "+" button at the right side
-4. Choose a campaign name and click on "Create Campaign"
-5. Click on "Add a Card"
-6. Choose any catalog card or "Build Your Own" and card options, click "next" to start creating your card
-7. Customize your card in any way you want and click on "Add to campaign"
-8. Click on "Save"
-
-After this you should be able to see the campaign if you go back to the Campaigns list and refresh.
-
 ## Authentication
 
 Authentication for the public api is done using OAuth2, more specifically the Authorization Code Flow with PKCE, specified in RFCs 6749 and 7636.
