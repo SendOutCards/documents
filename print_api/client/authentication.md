@@ -23,3 +23,31 @@ Authentication for the public api is done using OAuth2, more specifically the Au
 
 Redirect the user to:
 `https://www.sendoutcards.com/oauth2/authorize/?response_type=code&code_challenge={code_challenge}&code_challenge_method=S256&client_id={client_id}&redirect_uri={redirect_uri}`
+
+### Get the Access Token
+
+To get the `access_token`, make a POST request to `https://www.sendoutcards.com/oauth2/token/`, sending the following data as "Form URL Encoded":
+
+- `client_id`
+- `code`
+- `code_verifier`
+- `redirect_uri`: This must be the exact same as the original `redirect_uri`.
+- `grant_type=authorization_code`
+
+The response will be in JSON format and will include the following data:
+
+- `token_type` and `access_token`: Can be used to authorize public API requests by setting the authorization header: `Authorization: {token_type} {access_token}`.
+  
+- `expires_in`: Lifetime of the `access_token` in seconds.
+  
+- `refresh_token`: Can be used to obtain new `access_tokens` without going through the whole flow after the current `access_token` has expired.
+
+### Refresh the Token After It Has Expired
+
+After the `access_token` has expired, you can refresh the token by sending a POST request to `https://www.sendoutcards.com/oauth2/token/` with the following data:
+
+- `client_id`
+- `grant_type=authorization_code`
+- `refresh_token`
+
+The response data will be the same as in the previous request.
