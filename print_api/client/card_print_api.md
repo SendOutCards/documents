@@ -33,6 +33,7 @@ The API allows you to create batches of card orders and manage them through thei
 | `CardPaperType`   | `STANDARD`, `SATIN`, `PEARL`                                                                                |
 | `CardBatchStatus` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`                                                              |
 | `OrderInfoStatus` | `PENDING`, `FULFILLED`, `REJECTED`, `HELD`, `PAYMENT_ERROR`, `AWAITING_FULFILLMENT`, `REFUNDED`, `CANCELED` |
+| `CardPaperType`   | `SATIN`, `STANDARD`, `PEARL`                                                                                |
 
 #### Input Types
 
@@ -78,12 +79,13 @@ Represents the design of a card with all its panels.
 
 Represents a complete card to be sent to one or more recipients.
 
-| Field         | Type               | Description                       |
-| ------------- | ------------------ | --------------------------------- |
-| `type`        | `CardType!`        | Type of the card.                 |
-| `orientation` | `CardOrientation!` | Orientation of the card.          |
-| `recipients`  | `[ContactInput!]!` | List of recipients for this card. |
-| `card`        | `CardInput!`       | Design information for the card.  |
+| Field         | Type               | Description                              |
+| ------------- | ------------------ | ---------------------------------------- |
+| `type`        | `CardType!`        | Type of the card.                        |
+| `paperType`   | `CardPaperType`    | Paper type, default to standard          |
+| `orientation` | `CardOrientation!` | Orientation of the card.                 |
+| `recipients`  | `[ContactInput!]!` | List of recipients for this card.        |
+| `card`        | `CardInput!`       | Design information for the card.         |
 
 #### Output Types
 
@@ -135,12 +137,13 @@ Contains information about a card panel.
 
 Contains information about a card.
 
-| Field    | Type         | Description               |
-| -------- | ------------ | ------------------------- |
-| `type`   | `CardType!`  | Type of the card.         |
-| `front`  | `CardPanel`  | Front panel of the card.  |
-| `inside` | `CardPanel!` | Inside panel of the card. |
-| `back`   | `CardPanel!` | Back panel of the card.   |
+| Field       | Type            | Description                     |
+| ----------- | --------------- | ------------------------------- |
+| `type`      | `CardType!`     | Type of the card.               |
+| `paperType` | `CardPaperType` | Paper type, default to standard |         |
+| `front`     | `CardPanel`     | Front panel of the card.        |
+| `inside`    | `CardPanel!`    | Inside panel of the card.       |
+| `back`      | `CardPanel!`    | Back panel of the card.         |
 
 ##### `CardLine`
 
