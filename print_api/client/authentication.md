@@ -47,7 +47,7 @@ The response will be in JSON format and will include the following data:
 After the `access_token` has expired, you can refresh the token by sending a POST request to `https://www.sendoutcards.com/oauth2/token/` with the following data:
 
 - `client_id`
-- `grant_type=authorization_code`
+- `grant_type=refresh_token`
 - `refresh_token`
 
 The response data will be the same as in the previous request.
