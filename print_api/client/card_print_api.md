@@ -37,6 +37,22 @@ The API allows you to create batches of card orders and manage them through thei
 
 #### Input Types
 
+##### `AddressInput`
+
+Represents address information for return addresses.
+
+| Field         | Type      | Description                                                    |
+| ------------- | --------- | -------------------------------------------------------------- |
+| `firstName`   | `String!` | First name. Limited to 100 characters.                         |
+| `lastName`    | `String!` | Last name. Limited to 100 characters.                          |
+| `companyName` | `String!` | Company name. Limited to 255 characters.                       |
+| `address1`    | `String!` | Primary address line. Limited to 100 characters.               |
+| `address2`    | `String!` | Secondary address line. Limited to 100 characters.             |
+| `city`        | `String!` | City name. Limited to 50 characters.                           |
+| `state`       | `String!` | State or province. Limited to 100 characters.                  |
+| `postalCode`  | `String!` | Postal or ZIP code. Limited to 20 characters.                  |
+| `countryCode` | `String!` | ISO3166-1 alpha2 country code. Must have exactly 2 characters. |
+
 ##### `ContactInput`
 
 Represents a recipient's contact information.
@@ -79,6 +95,7 @@ Represents the design of a card with all its panels.
 
 Represents a complete card to be sent to one or more recipients.
 
+<<<<<<< Updated upstream
 | Field         | Type               | Description                              |
 | ------------- | ------------------ | ---------------------------------------- |
 | `type`        | `CardType!`        | Type of the card.                        |
@@ -86,8 +103,33 @@ Represents a complete card to be sent to one or more recipients.
 | `orientation` | `CardOrientation!` | Orientation of the card.                 |
 | `recipients`  | `[ContactInput!]!` | List of recipients for this card.        |
 | `card`        | `CardInput!`       | Design information for the card.         |
+=======
+| Field           | Type               | Description                                                                                             |
+| --------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
+| `type`          | `CardType!`        | Type of the card.                                                                                       |
+| `orientation`   | `CardOrientation!` | Orientation of the card.                                                                                |
+| `recipients`    | `[ContactInput!]!` | List of recipients for this card.                                                                       |
+| `card`          | `CardInput!`       | Design information for the card.                                                                        |
+| `returnAddress` | `AddressInput`     | Optional return address for the card. If not provided, the default account return address will be used. |
+>>>>>>> Stashed changes
 
 #### Output Types
+
+##### `ReturnAddress`
+
+Contains return address information.
+
+| Field         | Type      | Description                    |
+| ------------- | --------- | ------------------------------ |
+| `firstName`   | `String!` | First name.                    |
+| `lastName`    | `String!` | Last name.                     |
+| `companyName` | `String!` | Company name.                  |
+| `address1`    | `String!` | Primary address line.          |
+| `address2`    | `String!` | Secondary address line.        |
+| `city`        | `String!` | City name.                     |
+| `state`       | `String!` | State or province.             |
+| `postalCode`  | `String!` | Postal or ZIP code.            |
+| `countryCode` | `String!` | ISO3166-1 alpha2 country code. |
 
 ##### `Contact`
 
@@ -149,11 +191,12 @@ Contains information about a card.
 
 Represents a card order for one or more recipients.
 
-| Field        | Type            | Description                          |
-| ------------ | --------------- | ------------------------------------ |
-| `id`         | `ID!`           | Unique identifier for the card line. |
-| `card`       | `Card`          | Card information.                    |
-| `recipients` | `[Recipient!]!` | List of recipients for this card.    |
+| Field           | Type             | Description                          |
+| --------------- | ---------------- | ------------------------------------ |
+| `id`            | `ID!`            | Unique identifier for the card line. |
+| `card`          | `Card`           | Card information.                    |
+| `recipients`    | `[Recipient!]!`  | List of recipients for this card.    |
+| `returnAddress` | `ReturnAddress!` | Return address for the card.         |
 
 ##### `CardLineBatch`
 
@@ -204,6 +247,17 @@ query GetCardLineBatch($id: ID!) {
             back {
               url
             }
+          }
+          returnAddress {
+            firstName
+            lastName
+            companyName
+            address1
+            address2
+            city
+            state
+            postalCode
+            countryCode
           }
           recipients {
             contact {
@@ -314,7 +368,55 @@ mutation FinalizeCardLineBatch($batchUuid: ID, $batchId: ID) {
 
 ## Examples
 
-### Creating a New Batch
+### Creating a New Batch with Return Address
+
+```graphql
+mutation CreateCardLineBatch {
+  cardLineBatchCreate(
+    cards: [
+      {
+        type: POSTCARD
+        orientation: LANDSCAPE
+        returnAddress: {
+          firstName: "Jane"
+          lastName: "Smith"
+          companyName: "My Business"
+          address1: "456 Business Ave"
+          address2: "Floor 2"
+          city: "Business City"
+          state: "NY"
+          postalCode: "54321"
+          countryCode: "US"
+        }
+        recipients: [
+          {
+            firstName: "John"
+            lastName: "Doe"
+            companyName: "ACME Inc."
+            address1: "123 Main St"
+            address2: "Suite 101"
+            city: "Anytown"
+            state: "CA"
+            postalCode: "12345"
+            countryCode: "US"
+            externalReference: "contact-123"
+          }
+        ]
+        card: {
+          front: { url: "https://example.com/images/front.jpg" }
+          back: { url: "https://example.com/images/back.jpg" }
+        }
+      }
+    ]
+    shouldFinalizeOrders: false
+  ) {
+    id
+    status
+  }
+}
+```
+
+### Creating a New Batch without Return Address (uses default)
 
 ```graphql
 mutation CreateCardLineBatch {
@@ -373,10 +475,20 @@ query GetBatchStatus {
     lines {
       edges {
         node {
+          returnAddress {
+            firstName
+            lastName
+            companyName
+            address1
+            city
+            state
+            postalCode
+            countryCode
+          }
           recipients {
             contact {
-              first_name
-              last_name
+              firstName
+              lastName
             }
             orderInfo {
               status
@@ -396,12 +508,13 @@ query GetBatchStatus {
 A Card Line Batch represents the process of creating multiple cards in a batch and optionally creating orders for the whole batch. Here's how the process works:
 
 1. You create a batch by calling the `cardLineBatchCreate` mutation with your card data and images.
-2. The system processes each card in the batch by downloading client images, reuploading them to our system, and constructing the cards.
-3. The status of the `CardLineBatch` reflects only the status of this card creation process, not the status of the entire order.
-4. If `shouldFinalizeOrders` is set to `true`, orders will be created only after all cards in the batch are successfully created.
-5. You can check the batch status at any time using the `cardLineBatch` query.
-6. The `orderInfo` field will remain `null` until the cards are all created and the batch status moves to `COMPLETED`.
-7. Orders are batched at the end of the day (EOD), so the `orderInfo` status for each card will most likely return `PENDING` until the following day, even after the batch is `COMPLETED`.
+2. Optionally specify a `returnAddress` for each card line. If not provided, the default account return address will be used.
+3. The system processes each card in the batch by downloading client images, reuploading them to our system, and constructing the cards.
+4. The status of the `CardLineBatch` reflects only the status of this card creation process, not the status of the entire order.
+5. If `shouldFinalizeOrders` is set to `true`, orders will be created only after all cards in the batch are successfully created.
+6. You can check the batch status at any time using the `cardLineBatch` query.
+7. The `orderInfo` field will remain `null` until the cards are all created and the batch status moves to `COMPLETED`.
+8. Orders are batched at the end of the day (EOD), so the `orderInfo` status for each card will most likely return `PENDING` until the following day, even after the batch is `COMPLETED`.
 
 ### Card Line Batch Status Flow
 
@@ -479,7 +592,7 @@ curl -X POST \
   -d '{"query": "YOUR_GRAPHQL_QUERY"}'
 ```
 
-### Creating a Card Batch
+### Creating a Card Batch with Return Address
 
 Request:
 
@@ -495,6 +608,17 @@ curl -X POST \
       {
         "type": "POSTCARD",
         "orientation": "LANDSCAPE",
+        "returnAddress": {
+          "firstName": "Jane",
+          "lastName": "Smith",
+          "companyName": "My Business",
+          "address1": "456 Business Ave",
+          "address2": "Floor 2",
+          "city": "Business City",
+          "state": "NY",
+          "postalCode": "54321",
+          "countryCode": "US"
+        },
         "recipients": [
           {
             "firstName": "John",
@@ -571,7 +695,7 @@ Response:
 }
 ```
 
-### Querying Batch Status
+### Querying Batch Status with Return Address
 
 Request:
 
@@ -581,7 +705,7 @@ curl -X POST \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'Content-Type: application/json' \
   -d '{
-  "query": "query GetBatchStatus($id: ID!) { cardLineBatch(id: $id) { status totalCardLinesToProcess totalCardLinesProcessed lines { edges { node { recipients { contact { firstName lastName } orderInfo { status } } } } } } }",
+  "query": "query GetBatchStatus($id: ID!) { cardLineBatch(id: $id) { status totalCardLinesToProcess totalCardLinesProcessed lines { edges { node { returnAddress { firstName lastName companyName address1 city state postalCode countryCode } recipients { contact { firstName lastName } orderInfo { status } } } } } } }",
   "variables": {
     "id": "Q2FyZExpbmVCYXRjaDoxMjM="
   }
@@ -601,6 +725,16 @@ Response:
         "edges": [
           {
             "node": {
+              "returnAddress": {
+                "firstName": "Jane",
+                "lastName": "Smith",
+                "companyName": "My Business",
+                "address1": "456 Business Ave",
+                "city": "Business City",
+                "state": "NY",
+                "postalCode": "54321",
+                "countryCode": "US"
+              },
               "recipients": [
                 {
                   "contact": {
