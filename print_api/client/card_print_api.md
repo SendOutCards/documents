@@ -95,15 +95,13 @@ Represents the design of a card with all its panels.
 
 Represents a complete card to be sent to one or more recipients.
 
-<<<<<<< Updated upstream
-| Field         | Type               | Description                              |
-| ------------- | ------------------ | ---------------------------------------- |
-| `type`        | `CardType!`        | Type of the card.                        |
-| `paperType`   | `CardPaperType`    | Paper type, default to standard          |
-| `orientation` | `CardOrientation!` | Orientation of the card.                 |
-| `recipients`  | `[ContactInput!]!` | List of recipients for this card.        |
-| `card`        | `CardInput!`       | Design information for the card.         |
-=======
+| Field           | Type               | Description                                                                                             |
+| --------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
+| `type`          | `CardType!`        | Type of the card.                                                                                       |
+| `paperType`     | `CardPaperType`    | Paper type, default to standard                                                                         |
+| `orientation`   | `CardOrientation!` | Orientation of the card.                                                                                |
+| `recipients`    | `[ContactInput!]!` | List of recipients for this card.                                                                       |
+| `card`          | `CardInput!`       | Design information for the card.                                                                        |
 | Field           | Type               | Description                                                                                             |
 | --------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
 | `type`          | `CardType!`        | Type of the card.                                                                                       |
@@ -111,7 +109,6 @@ Represents a complete card to be sent to one or more recipients.
 | `recipients`    | `[ContactInput!]!` | List of recipients for this card.                                                                       |
 | `card`          | `CardInput!`       | Design information for the card.                                                                        |
 | `returnAddress` | `AddressInput`     | Optional return address for the card. If not provided, the default account return address will be used. |
->>>>>>> Stashed changes
 
 #### Output Types
 
@@ -180,9 +177,9 @@ Contains information about a card panel.
 Contains information about a card.
 
 | Field       | Type            | Description                     |
-| ----------- | --------------- | ------------------------------- |
+| ----------- | --------------- | ------------------------------- | --- |
 | `type`      | `CardType!`     | Type of the card.               |
-| `paperType` | `CardPaperType` | Paper type, default to standard |         |
+| `paperType` | `CardPaperType` | Paper type, default to standard |     |
 | `front`     | `CardPanel`     | Front panel of the card.        |
 | `inside`    | `CardPanel!`    | Inside panel of the card.       |
 | `back`      | `CardPanel!`    | Back panel of the card.         |
@@ -209,6 +206,7 @@ Represents a batch of card orders. A Card Line Batch is the process of creating 
 | `totalCardLinesToProcess` | `Int!`             | Total number of card lines in the batch.                                                                                |
 | `totalCardLinesProcessed` | `Int!`             | Number of card lines that have been processed.                                                                          |
 | `lines`                   | `[CardLine!]!`     | List of card lines in the batch.                                                                                        |
+| `statusMessage`           | `String`           | Additional context for the current status. Shows failure reasons when status is in `FAILED` state                       |
 
 The status of the CardLineBatch progresses as follows:
 
