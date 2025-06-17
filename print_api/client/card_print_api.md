@@ -78,6 +78,18 @@ Represents one panel of a card.
 | ----- | --------- | ------------------------------------------- |
 | `url` | `String!` | URL to the image to be used for this panel. |
 
+##### `CardLineBatchCancelInput`
+
+| Field | Type  | Description                        |
+| ----- | ----- | ---------------------------------- |
+| `id`  | `ID!` | ID of the batch you want to cancel |
+
+##### `CardLineBatchRetryInput`
+
+| Field | Type  | Description                       |
+| ----- | ----- | --------------------------------- |
+| `id`  | `ID!` | ID of the batch you want to retry |
+
 ##### `CardInput`
 
 Represents the design of a card with all its panels.
@@ -451,6 +463,25 @@ mutation CreateCardLineBatch {
 }
 ```
 
+#### `cardLineBatchCancel`
+
+Cancels an existing batch that has been finalized with `shouldFinalizeOrders`. Note this will cancel the orders created with this batch that have NOT been fulfilled.
+
+```graphql
+mutation CancelCardLineBatch($input: CardLineBatchCancelInput!) {
+  cardLineBatchCancel(input: $input) {
+    success
+    message
+  }
+}
+```
+
+**Parameters:**
+
+| Parameter | Type                        | Description                                      |
+| --------- | --------------------------- | ------------------------------------------------ |
+| `input`   | `CardLineBatchCancelInput!` | Includes the ID of the batch you want to cancel. |
+
 ### Finalizing a Batch
 
 ```graphql
@@ -458,6 +489,22 @@ mutation FinalizeCardLineBatch {
   cardLineBatchFinalize(batchUuid: "550e8400-e29b-41d4-a716-446655440000") {
     id
     status
+  }
+}
+```
+
+### Retry a Failed Batch
+
+This will change the `status` back to `PENDING` until the asynchronous processes finish the retrying to create the batch. Once they finish the status will either be `COMPLETED` or `FAILED` again
+Returns the full CardLineBatch
+
+```graphql
+mutation RetryFailedBatch($input: CardLineBatchRetryInput!) {
+  cardLineBatchRetry(input: $input) {
+    id
+    status
+    statusMessage
+    ...CardLineBatchFields ## get any fields needed from the card line batch type
   }
 }
 ```
