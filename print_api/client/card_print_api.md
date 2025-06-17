@@ -218,7 +218,7 @@ Represents a batch of card orders. A Card Line Batch is the process of creating 
 | `totalCardLinesToProcess` | `Int!`             | Total number of card lines in the batch.                                                                                |
 | `totalCardLinesProcessed` | `Int!`             | Number of card lines that have been processed.                                                                          |
 | `lines`                   | `[CardLine!]!`     | List of card lines in the batch.                                                                                        |
-| `statusMessage`           | `String`           | Additional context for the current status. Shows failure reasons when status is in `FAILED` state                       |
+| `failureReason`           | `String`           | Shows failure reasons when status is in `FAILED` state                                                                  |
 
 The status of the CardLineBatch progresses as follows:
 
@@ -503,7 +503,7 @@ mutation RetryFailedBatch($input: CardLineBatchRetryInput!) {
   cardLineBatchRetry(input: $input) {
     id
     status
-    statusMessage
+    failureReason
     ...CardLineBatchFields ## get any fields needed from the card line batch type
   }
 }
