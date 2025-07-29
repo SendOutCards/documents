@@ -240,53 +240,420 @@ query GetCardLineBatch($id: ID!) {
   cardLineBatch(id: $id) {
     id
     status
-    totalCardLinesToProcess
-    totalCardLinesProcessed
+    notes
+    fulfilledDate
     lines {
       edges {
         node {
           id
-          card {
-            type
-            front {
-              url
-            }
-            inside {
-              url
-            }
-            back {
-              url
-            }
-          }
-          returnAddress {
-            firstName
-            lastName
-            companyName
-            address1
-            address2
-            city
-            state
-            postalCode
-            countryCode
-          }
-          recipients {
-            contact {
-              id
-              firstName
-              lastName
-              address1
-              city
-              state
-              postalCode
-              countryCode
-              externalReference
-            }
-            orderInfo {
-              id
-              status
-            }
+          document {
+            id
+            file
           }
         }
+      }
+    }
+  }
+}
+```
+
+#### `printShopOrders`
+
+Retrieve a paginated list of print shop orders.
+
+```graphql
+query GetPrintShopOrders($first: Int, $after: String) {
+  printShopOrders(first: $first, after: $after) {
+    edges {
+      node {
+        id
+        status
+        notes
+        fulfilledDate
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+```
+
+### Mutations
+
+#### `printShopOrderCreate`
+
+Create a new print shop order with PDF documents to be processed.
+
+```graphql
+mutation CreatePrintShopOrder($order: PrintShopOrderInput!) {
+  printShopOrderCreate(order: $order) {
+    id
+    status
+    notes
+    lines {
+      edges {
+        node {
+          id
+          document {
+            id
+            file
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Parameters:**
+
+| Parameter | Type                   | Description                                 |
+| --------- | ---------------------- | ------------------------------------------- |
+| `order`   | `PrintShopOrderInput!` | Print shop order data including line items. |
+
+**Important Notes:**
+
+- All file URLs must point to valid PDF documents
+- The system validates both Content-Type headers and file signatures to ensure PDFs
+- Files are downloaded, validated, and stored with UUID-based filenames
+- Failed downloads or invalid files will cause the entire order creation to fail
+
+#### `printShopOrderCancel`
+
+Cancel an existing print shop order that has not yet been fulfilled.
+
+```graphql
+mutation CancelPrintShopOrder($id: Int!) {
+  printShopOrderCancel(id: $id) {
+    id
+    status
+    notes
+  }
+}
+```
+
+**Parameters:**
+
+| Parameter | Type   | Description                           |
+| --------- | ------ | ------------------------------------- |
+| `id`      | `Int!` | ID of the print shop order to cancel. |
+
+**Important Notes:**
+
+- Orders that have already been fulfilled cannot be cancelled
+- Only orders belonging to the authenticated OAuth2 application can be cancelled
+
+## Print Shop Examples
+
+### Creating a New Print Shop Order
+
+```graphql
+mutation CreatePrintShopOrder {
+  printShopOrderCreate(
+    order: {
+      notes: "Rush order - needed by end of day"
+      lines: [
+        {
+          document: { fileUrl: "https://example.com/documents/invoice-001.pdf" }
+        }
+        {
+          document: { fileUrl: "https://example.com/documents/receipt-002.pdf" }
+        }
+      ]
+    }
+  ) {
+    id
+    status
+    notes
+    lines {
+      edges {
+        node {
+          id
+          document {
+            id
+            file
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Querying Print Shop Order Status
+
+```graphql
+query GetPrintShopOrderStatus {
+  printShopOrder(id: "UHJpbnRTaG9wT3JkZXI6MTIz") {
+    id
+    status
+    notes
+    fulfilled_date
+    lines {
+      edges {
+        node {
+          id
+          document {
+            id
+            file
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Cancelling a Print Shop Order
+
+```graphql
+mutation CancelPrintShopOrder {
+  printShopOrderCancel(id: 123) {
+    id
+    status
+    notes
+  }
+}
+```
+
+## Print Shop Workflow and Process
+
+### Order Creation Process
+
+1. **Order Submission**: Client submits a print shop order with PDF file URLs
+2. **File Download**: System downloads each PDF from the provided URLs
+3. **PDF Validation**: Each file is validated to ensure it's a proper PDF document
+4. **File Storage**: Valid PDFs are stored with UUID-based filenames in the format: `print_shop/{oauthAppId}/{orderId}/{uuid}.pdf`
+5. **Order Creation**: If all files are successfully processed, the order is created with `PENDING` status
+6. **Error Handling**: If any file fails validation or download, the entire order creation fails
+
+### Order Status Flow
+
+```
+PENDING → PRINTED → FULFILLED
+    ↓
+REJECTED or CANCELLED
+```
+
+- `PENDING`: Order has been created and is awaiting processing
+- `PRINTED`: Documents have been printed and are ready for fulfillment
+- `FULFILLED`: Order has been completed and delivered
+- `REJECTED`: Order was rejected during processing
+- `CANCELLED`: Order was cancelled before fulfillment
+
+### File Requirements
+
+- **Format**: Only PDF files are accepted
+- **Validation**: Both HTTP Content-Type header and file signature are checked
+- **Access**: File URLs must be publicly accessible for download
+- **Storage**: Files are stored with UUID-based names to prevent conflicts
+
+### Error Handling
+
+The Print Shop API includes comprehensive error handling:
+
+- **Download Failures**: Network errors or inaccessible URLs
+- **Invalid Files**: Non-PDF files or corrupted documents
+- **Storage Errors**: File system or cloud storage issues
+- **Permission Errors**: Unauthorized access to orders
+
+All errors trigger Slack notifications to the production team for immediate attention.
+
+## Print Shop cURL Examples
+
+### Creating a Print Shop Order
+
+Request:
+
+```bash
+curl -X POST \
+  https://sendoutcards.com/public_api/graphql \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "query": "mutation CreatePrintShopOrder($order: PrintShopOrderInput!) { printShopOrderCreate(order: $order) { id status notes lines { edges { node { id document { id file } } } } } }",
+  "variables": {
+    "order": {
+      "notes": "Rush order - needed by end of day",
+      "lines": [
+        {
+          "document": {
+            "fileUrl": "https://example.com/documents/invoice-001.pdf"
+          }
+        },
+        {
+          "document": {
+            "fileUrl": "https://example.com/documents/receipt-002.pdf"
+          }
+        }
+      ]
+    }
+  }
+}'
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "printShopOrderCreate": {
+      "id": "UHJpbnRTaG9wT3JkZXI6MTIz",
+      "status": "PENDING",
+      "notes": "Rush order - needed by end of day",
+      "lines": {
+        "edges": [
+          {
+            "node": {
+              "id": "UHJpbnRTaG9wTGluZToxMjM=",
+              "document": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "file": "printShop/app123/order456/550e8400-e29b-41d4-a716-446655440000.pdf"
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "UHJpbnRTaG9wTGluZToxMjQ=",
+              "document": {
+                "id": "550e8400-e29b-41d4-a716-446655440001",
+                "file": "printShop/app123/order456/550e8400-e29b-41d4-a716-446655440001.pdf"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+### Querying Print Shop Order Status
+
+Request:
+
+```bash
+curl -X POST \
+  https://sendoutcards.com/public_api/graphql \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "query": "query GetPrintShopOrder($id: ID!) { printShopOrder(id: $id) { id status notes fulfilledDate lines { edges { node { id document { id file } } } } } }",
+  "variables": {
+    "id": "UHJpbnRTaG9wT3JkZXI6MTIz"
+  }
+}'
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "printShopOrder": {
+      "id": "UHJpbnRTaG9wT3JkZXI6MTIz",
+      "status": "FULFILLED",
+      "notes": "Rush order - needed by end of day",
+      "fulfilledDate": "2024-01-15T14:30:00Z",
+      "lines": {
+        "edges": [
+          {
+            "node": {
+              "id": "UHJpbnRTaG9wTGluZToxMjM=",
+              "document": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "file": "printShop/app123/order456/550e8400-e29b-41d4-a716-446655440000.pdf"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+### Cancelling a Print Shop Order
+
+Request:
+
+```bash
+curl -X POST \
+  https://sendoutcards.com/public_api/graphql \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "query": "mutation CancelPrintShopOrder($id: Int!) { printShopOrderCancel(id: $id) { id status notes } }",
+  "variables": {
+    "id": 123
+  }
+}'
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "printShopOrderCancel": {
+      "id": "UHJpbnRTaG9wT3JkZXI6MTIz",
+      "status": "CANCELLED",
+      "notes": "Rush order - needed by end of day"
+    }
+  }
+}
+```
+
+### Paginated Query for Multiple Print Shop Orders
+
+Request:
+
+```bash
+curl -X POST \
+  https://sendoutcards.com/public_api/graphql \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "query": "query GetPrintShopOrders($first: Int, $after: String) { printShopOrders(first: $first, after: $after) { edges { node { id status notes fulfilledDate } cursor } pageInfo { hasNextPage endCursor } } }",
+  "variables": {
+    "first": 10,
+    "after": null
+  }
+}'
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "printShopOrders": {
+      "edges": [
+        {
+          "node": {
+            "id": "UHJpbnRTaG9wT3JkZXI6MTIz",
+            "status": "FULFILLED",
+            "notes": "Rush order - needed by end of day",
+            "fulfilledDate": "2024-01-15T14:30:00Z"
+          },
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA="
+        },
+        {
+          "node": {
+            "id": "UHJpbnRTaG9wT3JkZXI6MTI0",
+            "status": "PENDING",
+            "notes": "Standard processing",
+            "fulfilledDate": null
+          },
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE="
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjE="
       }
     }
   }
