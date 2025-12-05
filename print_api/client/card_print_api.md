@@ -57,18 +57,19 @@ Represents address information for return addresses.
 
 Represents a recipient's contact information.
 
-| Field               | Type      | Description                                                              |
-| ------------------- | --------- | ------------------------------------------------------------------------ |
-| `firstName`         | `String!` | First name of the recipient. Limited to 100 characters.                  |
-| `lastName`          | `String!` | Last name of the recipient. Limited to 100 characters.                   |
-| `companyName`       | `String!` | Company name. Limited to 255 characters.                                 |
-| `address1`          | `String!` | Primary address line. Limited to 100 characters.                         |
-| `address2`          | `String!` | Secondary address line. Limited to 100 characters.                       |
-| `city`              | `String!` | City name. Limited to 50 characters.                                     |
-| `state`             | `String!` | State or province. Limited to 100 characters.                            |
-| `postalCode`        | `String!` | Postal or ZIP code. Limited to 20 characters.                            |
-| `countryCode`       | `String!` | ISO3166-1 alpha2 country code. Must have exactly 2 characters.           |
-| `externalReference` | `ID!`     | ID of the contact in your system. Required and limited to 50 characters. |
+| Field               | Type      | Description                                                                                                                                 |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `firstName`         | `String!` | First name of the recipient. Limited to 100 characters.                                                                                     |
+| `lastName`          | `String!` | Last name of the recipient. Limited to 100 characters.                                                                                      |
+| `companyName`       | `String!` | Company name. Limited to 255 characters.                                                                                                    |
+| `address1`          | `String!` | Primary address line. Limited to 100 characters.                                                                                            |
+| `address2`          | `String!` | Secondary address line. Limited to 100 characters.                                                                                          |
+| `city`              | `String!` | City name. Limited to 50 characters.                                                                                                        |
+| `state`             | `String!` | State or province. Limited to 100 characters.                                                                                               |
+| `postalCode`        | `String!` | Postal or ZIP code. Limited to 20 characters.                                                                                               |
+| `countryCode`       | `String!` | ISO3166-1 alpha2 country code. Must have exactly 2 characters.                                                                              |
+| `externalReference` | `ID!`     | ID of the contact in your system. Required and limited to 50 characters.                                                                    |
+| `userVerified`      | `Boolean` | If true, the recipient address will not be validated and the address provided will be trusted. Defaults to false if not provided. Optional. |
 
 ##### `CardLinePanelInput`
 

@@ -67,6 +67,7 @@ input ContactInput {
   postalCode: String!
   countryCode: String!
   externalReferenceId: ID
+  userVerified: Boolean # Default - false, If true the address will not be validated and the address provided will be trusted
 }
 
 input CardLineInput {
@@ -268,18 +269,19 @@ This documentation covers the two main mutations for creating and finalizing car
 
 ### ContactInput
 
-| Field                 | Type      | Description                      |
-| --------------------- | --------- | -------------------------------- |
-| `firstName`           | `String!` | First name of the contact        |
-| `lastName`            | `String!` | Last name of the contact         |
-| `companyName`         | `String`  | Company name (optional)          |
-| `address1`            | `String!` | First line of address            |
-| `address2`            | `String!` | Second line of address           |
-| `city`                | `String!` | City                             |
-| `state`               | `String!` | State or province                |
-| `postalCode`          | `String!` | Postal code                      |
-| `countryCode`         | `String!` | Country code                     |
-| `externalReferenceId` | `ID`      | External reference ID (optional) |
+| Field                 | Type      | Description                                                                                           |
+| --------------------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| `firstName`           | `String!` | First name of the contact                                                                             |
+| `lastName`            | `String!` | Last name of the contact                                                                              |
+| `companyName`         | `String`  | Company name (optional)                                                                               |
+| `address1`            | `String!` | First line of address                                                                                 |
+| `address2`            | `String!` | Second line of address                                                                                |
+| `city`                | `String!` | City                                                                                                  |
+| `state`               | `String!` | State or province                                                                                     |
+| `postalCode`          | `String!` | Postal code                                                                                           |
+| `countryCode`         | `String!` | Country code                                                                                          |
+| `externalReferenceId` | `ID`      | External reference ID (optional)                                                                      |
+| `userVerified`        | `Boolean` | If true, the address will not be validated and the address provided will be trusted (defaults to false) |
 
 ### CardLineInput
 
